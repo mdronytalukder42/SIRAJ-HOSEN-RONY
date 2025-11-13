@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TicketEntry, TripType } from '../../types';
+import { TicketEntry, TripType, TicketStatus } from '../../types';
 
 interface TicketFormModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ const TicketFormModal: React.FC<TicketFormModalProps> = ({ isOpen, onClose, onSa
     fromIssuer: '',
     bdNumber: '',
     qrNumber: '',
+    status: TicketStatus.Pending,
     ticketCopy: null as { fileName: string; dataUrl: string } | null,
   });
 
@@ -46,6 +47,7 @@ const TicketFormModal: React.FC<TicketFormModalProps> = ({ isOpen, onClose, onSa
             fromIssuer: entryToEdit.fromIssuer,
             bdNumber: entryToEdit.bdNumber || '',
             qrNumber: entryToEdit.qrNumber || '',
+            status: entryToEdit.status,
             ticketCopy: entryToEdit.ticketCopy,
         });
         setError('');
@@ -158,6 +160,12 @@ const TicketFormModal: React.FC<TicketFormModalProps> = ({ isOpen, onClose, onSa
                 <div>
                     <label htmlFor="issueDate-edit" className="block text-sm font-medium text-gray-300">Issue Date <span className="text-red-400">*</span></label>
                     <input type="date" id="issueDate-edit" name="issueDate" value={formData.issueDate} onChange={handleChange} className="mt-1 block w-full bg-gray-700 text-white border border-gray-600 rounded-md p-2"/>
+                </div>
+                <div>
+                    <label htmlFor="status-edit" className="block text-sm font-medium text-gray-300">Status</label>
+                    <select id="status-edit" name="status" value={formData.status} onChange={handleChange} className="mt-1 block w-full bg-gray-700 text-white border border-gray-600 rounded-md p-2">
+                        {Object.values(TicketStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                 </div>
                  <div>
                     <label htmlFor="bdNumber-edit" className="block text-sm font-medium text-gray-300">BD Number</label>

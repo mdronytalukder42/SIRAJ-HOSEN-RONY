@@ -38,7 +38,7 @@ export const sendNewEntryNotification = async (entry: IncomeEntry | TicketEntry,
         `;
     } else { // It's a TicketEntry
         subject = `New Ticket Entry by ${entry.userName}`;
-        notificationMessage = `New Ticket entry from ${entry.userName} for ${entry.passengerName} (PNR: ${entry.pnr})`;
+        notificationMessage = `New Ticket entry from ${entry.userName} for ${entry.passengerName} (PNR: ${entry.pnr}, Status: ${entry.status})`;
         body = `
             Hello ${adminUser.name},
 
@@ -48,6 +48,7 @@ export const sendNewEntryNotification = async (entry: IncomeEntry | TicketEntry,
             - Issue Date: ${entry.issueDate}
             - Passenger: ${entry.passengerName}
             - PNR: ${entry.pnr}
+            - Status: ${entry.status}
             - Route: ${entry.from} -> ${entry.to}
             - Airline: ${entry.flightName}
 

@@ -3,7 +3,7 @@ import Layout from '../components/layout/Layout';
 import SummaryCard from '../components/Dashboard/SummaryCard';
 import { getAllEntries, getAllTicketEntries, getStaffMembers } from '../services/api';
 import { generateInvoice, generateTicketReport } from '../services/invoiceService';
-import { IncomeEntry, EntryType, User, TicketEntry } from '../types';
+import { IncomeEntry, EntryType, User, TicketEntry, TicketStatus } from '../types';
 import DataChart from '../components/Dashboard/DataChart';
 import NotificationToast from '../components/Dashboard/NotificationToast';
 
@@ -72,6 +72,7 @@ const AdminDashboard: React.FC = () => {
     const [filterStaff, setFilterStaff] = useState<string>('all');
     const [filterMonth, setFilterMonth] = useState<string>('all');
     const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+    const [filterTicketStatus, setFilterTicketStatus] = useState<string>('all');
     const [activeView, setActiveView] = useState<ViewType>('income');
     const [searchQuery, setSearchQuery] = useState('');
     const [highlightedTicketId, setHighlightedTicketId] = useState<string | null>(null);
@@ -156,9 +157,10 @@ const AdminDashboard: React.FC = () => {
             const staffMatch = filterStaff === 'all' || entry.userId === filterStaff;
             const yearMatch = filterYear === 'all' || entry.issueDate.startsWith(filterYear);
             const monthMatch = filterMonth === 'all' || (entry.issueDate.substring(5, 7) === filterMonth);
-            return staffMatch && yearMatch && monthMatch;
+            const statusMatch = filterTicketStatus === 'all' || entry.status === filterTicketStatus;
+            return staffMatch && yearMatch && monthMatch && statusMatch;
         });
-    }, [ticketEntries, filterStaff, filterMonth, filterYear]);
+    }, [ticketEntries, filterStaff, filterMonth, filterYear, filterTicketStatus]);
 
     useEffect(() => {
         if (!searchQuery.trim()) {
@@ -242,6 +244,15 @@ const AdminDashboard: React.FC = () => {
             default: return 'bg-gray-100 text-gray-800';
         }
     };
+    
+    const getTicketStatusColor = (status: TicketStatus) => {
+        switch (status) {
+            case TicketStatus.Confirmed: return 'bg-green-100 text-green-800';
+            case TicketStatus.Pending: return 'bg-yellow-100 text-yellow-800';
+            case TicketStatus.Cancelled: return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
 
     const getLastName = (fullName: string): string => {
         if (!fullName) return '';
@@ -320,16 +331,16 @@ const AdminDashboard: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-700">
                      <thead className="bg-gray-900 bg-opacity-50">
                         <tr>
-                            {['Staff', 'Passenger', 'PNR', 'Route', 'Departure', 'Arrival', 'Airline', 'From Issuer', 'BD Number', 'QR Number', 'Ticket Copy'].map(h => 
+                            {['Staff', 'Passenger', 'PNR', 'Status', 'Route', 'Departure', 'Arrival', 'Airline', 'From Issuer', 'BD Number', 'QR Number', 'Ticket Copy'].map(h => 
                                 <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{h}</th>
                             )}
                         </tr>
                     </thead>
                     <tbody className="bg-gray-800 bg-opacity-50 divide-y divide-gray-700">
                         {loading ? (
-                            <tr><td colSpan={11} className="text-center py-4 text-gray-300">Loading entries...</td></tr>
+                            <tr><td colSpan={12} className="text-center py-4 text-gray-300">Loading entries...</td></tr>
                         ) : filteredTicketEntries.length === 0 ? (
-                            <tr><td colSpan={11} className="text-center py-4 text-gray-400">No ticket entries match the selected filters.</td></tr>
+                            <tr><td colSpan={12} className="text-center py-4 text-gray-400">No ticket entries match the selected filters.</td></tr>
                         ) : (
                             filteredTicketEntries.map(t => {
                                 const lastName = getLastName(t.passengerName);
@@ -346,6 +357,11 @@ const AdminDashboard: React.FC = () => {
                                          <a href={bookingUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" title={`Check PNR for ${t.passengerName} on ${t.flightName}`}>
                                             {t.pnr}
                                         </a>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTicketStatusColor(t.status)}`}>
+                                            {t.status}
+                                        </span>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">{`${t.from} -> ${t.to}`}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">{t.departureDate}</td>
@@ -455,8 +471,18 @@ const AdminDashboard: React.FC = () => {
                             {allMonths.map(m => <option key={m.value} value={m.value}>{m.name}</option>)}
                         </select>
                     </div>
+                     {activeView === 'tickets' && (
+                        <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-300">Status:</label>
+                            <select value={filterTicketStatus} onChange={e => setFilterTicketStatus(e.target.value)} className="block bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm p-2">
+                                <option value="all">All Statuses</option>
+                                {Object.values(TicketStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                    )}
                 </div>
-                 <button onClick={handleDownloadInvoice} disabled={filterStaff === 'all' || filterMonth === 'all' || filterYear === 'all'} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500">
+                <div>
+                 <button onClick={handleDownloadInvoice} disabled={filterStaff === 'all' || filterMonth === 'all' || filterYear === 'all'} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-500 mr-2">
                     Download Income Invoice
                 </button>
                  {activeView === 'tickets' && (
@@ -464,6 +490,7 @@ const AdminDashboard: React.FC = () => {
                         Download Ticket Report
                     </button>
                 )}
+                </div>
             </div>
 
             <div className="bg-gray-800 bg-opacity-75 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-gray-700">

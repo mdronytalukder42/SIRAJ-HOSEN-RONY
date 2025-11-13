@@ -36,6 +36,12 @@ export enum TripType {
     Return = 'Return',
 }
 
+export enum TicketStatus {
+    Pending = 'Pending',
+    Confirmed = 'Confirmed',
+    Cancelled = 'Cancelled',
+}
+
 export interface TicketEntry {
     id:string;
     userId: string;
@@ -54,4 +60,5 @@ export interface TicketEntry {
     bdNumber?: string;
     qrNumber?: string;
     ticketCopy: { fileName: string; dataUrl: string } | null;
+    status: TicketStatus;
 }

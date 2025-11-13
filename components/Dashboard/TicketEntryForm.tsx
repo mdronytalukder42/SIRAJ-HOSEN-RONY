@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TicketEntry, TripType, User } from '../../types';
+import { TicketEntry, TripType, User, TicketStatus } from '../../types';
 
 interface TicketEntryFormProps {
   onSave: (entry: Omit<TicketEntry, 'id'>) => void;
@@ -21,6 +21,7 @@ const TicketEntryForm: React.FC<TicketEntryFormProps> = ({ onSave, currentUser }
     fromIssuer: '',
     bdNumber: '',
     qrNumber: '',
+    status: TicketStatus.Pending,
     ticketCopy: null as { fileName: string; dataUrl: string } | null,
   });
 
@@ -133,6 +134,12 @@ const TicketEntryForm: React.FC<TicketEntryFormProps> = ({ onSave, currentUser }
                 <input type="date" id="returnDate-add" name="returnDate" value={formData.returnDate} onChange={handleChange} className="mt-1 block w-full bg-gray-700 text-white border border-gray-600 rounded-md p-2"/>
               </div>
             )}
+             <div>
+                <label htmlFor="status-add" className="block text-sm font-medium text-gray-300">Status</label>
+                <select id="status-add" name="status" value={formData.status} onChange={handleChange} className="mt-1 block w-full bg-gray-700 text-white border border-gray-600 rounded-md p-2">
+                    {Object.values(TicketStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+            </div>
             <div>
                 <label htmlFor="bdNumber-add" className="block text-sm font-medium text-gray-300">BD Number</label>
                 <input type="text" id="bdNumber-add" name="bdNumber" value={formData.bdNumber} onChange={handleChange} className="mt-1 block w-full bg-gray-700 text-white border border-gray-600 rounded-md p-2"/>
